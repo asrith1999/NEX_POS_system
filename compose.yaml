@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      APP_KEY: ${APP_KEY:?Set APP_KEY in .env}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: nexus_pos
+      DB_USERNAME: nexus_pos
+      DB_PASSWORD: ${POS_DB_PASSWORD:?Set POS_DB_PASSWORD in .env}
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      CACHE_STORE: database
+      POS_MIGRATE: "1"
+      POS_SEED: ${POS_SEED:-0}
+      POS_ADMIN_EMAIL: ${POS_ADMIN_EMAIL:-admin@gmail.com}
+      POS_ADMIN_PASSWORD: ${POS_ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: nexus_pos
+      MYSQL_USER: nexus_pos
+      MYSQL_PASSWORD: ${POS_DB_PASSWORD:?Set POS_DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${POS_DB_ROOT_PASSWORD:?Set POS_DB_ROOT_PASSWORD in .env}
+    volumes:
+      - pos_database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  pos_database:
