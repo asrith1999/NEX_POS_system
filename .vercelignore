@@ -1,0 +1,11 @@
+.git
+.env*
+*.zip
+backend/.env*
+backend/vendor
+backend/database/*.sqlite*
+backend/storage/**/*.log
+backend/storage/framework/views/*.php
+backend/bootstrap/cache/*.php
+frontend/node_modules
+frontend/dist

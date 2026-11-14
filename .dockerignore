@@ -1,0 +1,11 @@
+.git
+.env*
+**/.env
+**/node_modules
+**/vendor
+**/dist
+**/database/*.sqlite*
+**/storage/**/*.log
+**/storage/framework/views/*.php
+**/bootstrap/cache/*.php
+*.zip

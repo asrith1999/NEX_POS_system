@@ -1,0 +1,19 @@
+{
+    auto_https off
+    frankenphp
+}
+
+:{$PORT:80} {
+    root * /app/public
+    encode zstd gzip
+    @phpSource path *.php
+    respond @phpSource 404
+    @api path /api/* /up
+    handle @api {
+        php_server
+    }
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}
