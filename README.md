@@ -4,6 +4,14 @@ Vue 3 frontend, Laravel 12 backend, and MySQL or SQLite. The original
 `backend.zip` and `frontend.zip` remain available; use the editable `backend/`
 and `frontend/` directories for development and deployment.
 
+Live demo: **https://asrith-nexus-pos.vercel.app/**
+
+The editable source is on the review branch until the pull request is merged:
+
+```powershell
+git clone --branch codex/complete-project-setup-953b9b --single-branch https://github.com/asrith1999/NEX_POS_system.git
+```
+
 The implemented workflow is sign in → load products → build a cart → checkout
 with a database transaction → update stock → sign out. Authentication uses a
 server session and CSRF tokens. Prices and available stock are checked by the
@@ -78,22 +86,30 @@ MySQL service, and configure the environment from `compose.yaml`. Terminate
 HTTPS at the host, set `APP_URL` to the HTTPS URL and
 `SESSION_SECURE_COOKIE=true`, set `APP_DEBUG=false`, and configure the host's
 health check to `GET /up`. Set `PORT` to its required HTTP port. Keep one app
-replica while running startup migrations. There are no provider credentials
-or paid hosting resources in this repository. Hosting is configured here;
-a provider deployment and database provisioning must still succeed before
-there is a live URL. A standalone static frontend cannot run this POS.
+replica while running startup migrations. Keep runtime secrets in the host's
+environment settings. The verified Vercel deployment below runs the frontend
+and backend together, with its database in TiDB Cloud.
 
 ## Vercel container deployment
 
 `vercel.json` selects the Container preset and the existing root Dockerfile.
-The Vue build and Laravel API stay on one HTTPS origin. The project prepared
-for this deployment is **asrith-nexus-pos** in the Vercel team
-**asriths-projects-5fec6fa1**. It is not live yet.
+The Vue build and Laravel API stay on one HTTPS origin. The live project is
+**asrith-nexus-pos** in the Vercel team **asriths-projects-5fec6fa1**.
 
-The remaining prerequisite is an external MySQL-compatible database. The
+Its MySQL-compatible TiDB Starter instance, **nexus-pos-db**, is in the
+**nexus-pos** TiDB project in Singapore. The monthly spending limit is **$0**.
+The Vercel integration has access to this POS project only; its database
+connection variables are scoped to production. Sessions and cache use the
+database so they survive across app instances.
+
+The hosted database was initialized once with 12 tables, one owner login and
+eight sample products. Login details are supplied privately to the owner.
+The acceptance check left one synthetic order in the sample inventory.
+The original local databases and their user passwords were preserved.
+
+For another installation, the
 [TiDB Cloud integration](https://vercel.com/marketplace/tidb-cloud) can connect
-an existing cluster to this project. Create a separate empty free cluster
-and connect it to **asrith-nexus-pos**. The integration supplies `TIDB_HOST`,
+a separate empty MySQL-compatible cluster to a Vercel project. It supplies `TIDB_HOST`,
 `TIDB_PORT`, `TIDB_USER`, `TIDB_PASSWORD` and `TIDB_DATABASE`; the Laravel
 configuration accepts these directly. Standard `DB_*` settings still take
 precedence for other MySQL hosts. TiDB connections use the system CA bundle
@@ -112,10 +128,13 @@ passwords and product stock are preserved by repeat seeding. Keep
 `POS_MIGRATE=0` and `POS_SEED=0` on autoscaling app instances so each cold
 start does not migrate or seed the shared database.
 
-After provisioning, deploy and verify login, CSRF protection, checkout,
-stock persistence and logout against the real hosted database. The
-database connection, container build and public POS deployment still need
-these acceptance checks before a working live URL can be claimed.
+Encrypted SQL connectivity, the container build and all 10 hosted HTTPS
+acceptance checks passed. The checks cover login, CSRF protection, cart
+validation, transaction rollback, stock updates and logout. See `VALIDATION.md`.
+
+Deploy reviewed source explicitly through Vercel after changes. The current
+deployment was uploaded from the review branch's source files; connect the
+Git repository after review to configure automatic deployments.
 
 ## Verify
 
@@ -130,4 +149,5 @@ Feature tests cover invalid credentials, server-side authorization, session
 login/logout, valid checkout totals, rollback on insufficient stock, empty
 carts, duplicate product rows, and repeat seeding. Laravel disables CSRF
 validation inside its test harness; verify the browser flow against a running
-backend as well. Docker build and MySQL acceptance checks require Docker.
+backend as well. Local Compose checks require Docker. The cloud container
+build and TiDB acceptance flow are recorded in `VALIDATION.md`.
