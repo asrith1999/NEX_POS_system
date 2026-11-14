@@ -83,6 +83,40 @@ or paid hosting resources in this repository. Hosting is configured here;
 a provider deployment and database provisioning must still succeed before
 there is a live URL. A standalone static frontend cannot run this POS.
 
+## Vercel container deployment
+
+`vercel.json` selects the Container preset and the existing root Dockerfile.
+The Vue build and Laravel API stay on one HTTPS origin. The project prepared
+for this deployment is **asrith-nexus-pos** in the Vercel team
+**asriths-projects-5fec6fa1**. It is not live yet.
+
+The remaining prerequisite is an external MySQL-compatible database. The
+[TiDB Cloud integration](https://vercel.com/marketplace/tidb-cloud) can connect
+an existing cluster to this project. Create a separate empty free cluster
+and connect it to **asrith-nexus-pos**. The integration supplies `TIDB_HOST`,
+`TIDB_PORT`, `TIDB_USER`, `TIDB_PASSWORD` and `TIDB_DATABASE`; the Laravel
+configuration accepts these directly. Standard `DB_*` settings still take
+precedence for other MySQL hosts. TiDB connections use the system CA bundle
+and verify the server certificate.
+
+Use `.env.vercel.example` as the settings checklist. Store real values in
+Vercel environment settings, never in Git or a browser bundle. Keep
+`APP_KEY` stable, use database-backed sessions and cache, and set
+`TRUST_PROXY=true` only behind the host's trusted reverse proxy. Local files
+inside a function instance are temporary; do not use SQLite for this host.
+
+Run `php artisan migrate --force` once against the connected database from
+a trusted deployment terminal, then seed with a new, strong
+`POS_ADMIN_PASSWORD` if this is a fresh installation. Existing user
+passwords and product stock are preserved by repeat seeding. Keep
+`POS_MIGRATE=0` and `POS_SEED=0` on autoscaling app instances so each cold
+start does not migrate or seed the shared database.
+
+After provisioning, deploy and verify login, CSRF protection, checkout,
+stock persistence and logout against the real hosted database. The
+database connection, container build and public POS deployment still need
+these acceptance checks before a working live URL can be claimed.
+
 ## Verify
 
 ```powershell
